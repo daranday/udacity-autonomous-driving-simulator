@@ -71,7 +71,7 @@ Then I took the advice to normalize the data, mirror the input and output, remov
 
 I then used the more powerful Lenet-5 architecture, changing the top and bottom layers only to accomodate the input and output format. This time the car seems to follow the road for the first road conditions, but does not fare well with the more complex transitions or the bridge.
 
-So I switched to the convolution architure used by the Nvidia autonomous car team which has five convolution with RELU activations and striding, replacing one convolution layer with maxpooling layer. I also changed my training data collection strategy. I started to intentionally veer off the center and record only when I try to recover to the center lane. This helped significantly to correct the car when it's running towards the border. I collect even more data for when the curb temporarily disappears, and that seemed to combat adverse road conditions more so than the architecture or data augmentation strategies.
+So I switched to the convolution architure used by the Nvidia autonomous car team which has five convolution with RELU activations and striding, adding a maxpooling layer in between. I also changed my training data collection strategy. I started to intentionally veer off the center and record only when I try to recover to the center lane. This helped significantly to correct the car when it's running towards the border. I collect even more data for when the curb temporarily disappears, and that seemed to combat adverse road conditions more so than the architecture or data augmentation strategies.
 
 Finally with the more comprehensive training images and complex architecture, the model is able to drive around the track one lap without running off the curb.
 
@@ -113,6 +113,6 @@ I also took more data samples for short but difficult scenarios, e.g. curb disap
 
 ![alt text][image6]
 
-For the training process, the data was shuffled to increase the randomness of the process to avoid the weights being skewed beyond repair unintentionally. The train/validation split was 20%. There are in total 66K images for training (including left, center and right). The data augmentation doubled that count, so our validation data is copious enough to be representative of the whole dataset.
+For the training process, the data was shuffled to increase the randomness of the process to avoid the weights being skewed beyond repair unintentionally. The train/validation split was 80/20. There are in total 66K images for training (including left, center and right). The data augmentation doubled that count, so our validation data is copious enough to be representative of the whole dataset. I also used a python generator to return training data for each batch and used fit_generator function from Keras. From that I was able to go from 9s per epoch to 1s per epoch. Quite a significant boost.
 
 One thing to note is that the absolute values of the training and validation errors don't matter. Since if you keep stay in center lane it's easy to train the model to follow that so the error is small, but if the car ended up somewhere else it's hard to correct, and the robustness of the model is actually less than if the training data is more diverse and result in larger overall errors.

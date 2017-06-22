@@ -32,6 +32,31 @@ def invert_data(X, y):
     return inverted_X, inverted_y
 
 
+class TrainingBatch(object):
+    """docstring for TrainingBatch"""
+
+    def __init__(self, X_train, y_train, validation_split, batch_size):
+        split_num = int((1 - validation_split) * len(X_train))
+        self.X_train = X_train[:split_num]
+        self.y_train = y_train[:split_num]
+        self.X_val = X_train[split_num:]
+        self.y_val = y_train[split_num:]
+        self.batch_size = batch_size
+        self.steps_per_epoch = split_num / batch_size
+
+    def get_validation_data(self):
+        return self.X_val, self.y_val
+
+    def get_steps_per_epoch(self):
+        return self.steps_per_epoch
+
+    def generator(self):
+        while True:
+            indices = np.random.choice(len(self.X_train),
+                                self.batch_size, replace=False)
+            yield (self.X_train[indices], self.y_train[indices])
+
+
 X_train = np.array(center_imgs)
 y_train = np.array(steerings)
 
@@ -54,6 +79,9 @@ from keras.layers import Flatten, Dense, Lambda, Cropping2D
 from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import MaxPooling2D
 
+batch_size = 128
+training_batch = TrainingBatch(X_train, y_train, 0.2, batch_size)
+
 model = Sequential()
 model.add(Lambda(lambda x: x / 255. - .5, input_shape=(160, 320, 3)))
 model.add(Cropping2D(cropping=((70, 25), (0, 0))))
@@ -69,6 +97,10 @@ model.add(Dense(50))
 model.add(Dense(10))
 model.add(Dense(1))
 model.compile(loss='mse', optimizer='adam')
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5)
+# model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5)
+model.fit_generator(training_batch.generator(),
+                    training_batch.get_steps_per_epoch(),
+                    nb_epoch=20,
+                    validation_data=training_batch.get_validation_data())
 
 model.save('model.h5')
